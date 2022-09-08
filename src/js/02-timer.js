@@ -1,5 +1,4 @@
 import flatpickr from 'flatpickr';
-// import 'flatpickr/dist/flatpickr.min.css';
 import 'flatpickr/dist/themes/material_green.css';
 
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
@@ -7,13 +6,6 @@ import { Notify } from 'notiflix/build/notiflix-notify-aio';
 let startTime;
 const btnStart = document.querySelector('button');
 btnStart.disabled = true;
-
-const dataSet = {
-  dataDay: document.querySelector('span[data-days]'),
-  dataHours: document.querySelector('span[data-hours]'),
-  dataMinute: document.querySelector('span[data-minutes]'),
-  dataSecond: document.querySelector('span[data-seconds]'),
-};
 
 flatpickr('#datetime-picker', {
   enableTime: true,
@@ -35,12 +27,22 @@ btnStart.addEventListener('click', onclick => {
   } else {
     Notify.success('Данный введены вверно начинаю отсчет');
   }
-  let intervalId = setInterval(() => {
-    const { days, hours, minutes, seconds } = convertMs(startTime - Date.now());
-    dataSet.dataDay.innerHTML = `${days}`;
-    dataSet.dataHours.innerHTML = `${hours}`;
-    dataSet.dataMinute.innerHTML = `${minutes}`;
-    dataSet.dataSecond.innerHTML = `${seconds}`;
+
+  const setInter = setInterval(() => {
+    const elements = convertMs(startTime - Date.now());
+
+    for (const key in elements) {
+      document.querySelector(`span[data-${key}]`).textContent = elements[key];
+    }
+
+    const sumTime = Object.values(elements).reduce(
+      (acc, i) => Number(acc) + Number(i)
+    );
+    console.log(sumTime);
+    if (sumTime === 0) {
+      clearInterval(setInter);
+      Notify.success('Ваше время вышло');
+    }
   }, 1000);
 
   btnStart.disabled = true;
@@ -51,19 +53,14 @@ function pad(value) {
 }
 
 function convertMs(ms) {
-  // Number of milliseconds per unit of time
   const second = 1000;
   const minute = second * 60;
   const hour = minute * 60;
   const day = hour * 24;
 
-  // Remaining days
   const days = pad(Math.floor(ms / day));
-  // Remaining hours
   const hours = pad(Math.floor((ms % day) / hour));
-  // Remaining minutes
   const minutes = pad(Math.floor(((ms % day) % hour) / minute));
-  // Remaining seconds
   const seconds = pad(Math.floor((((ms % day) % hour) % minute) / second));
 
   return { days, hours, minutes, seconds };
